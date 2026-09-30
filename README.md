@@ -14,13 +14,13 @@ The SDK never talks to the Payments.lk API and never needs an API key. Your back
 
 ## Installation (Swift Package Manager)
 
-In Xcode: File, Add Package Dependencies, enter `https://github.com/PAYable-IPG/payments-lk-ios`, choose Up to Next Major Version from `0.1.1`, then add the `PaymentsLk` library to your app target.
+In Xcode: File, Add Package Dependencies, enter `https://github.com/PAYable-IPG/payments-lk-ios`, choose Up to Next Major Version from `0.1.2`, then add the `PaymentsLk` library to your app target.
 
 In a `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/PAYable-IPG/payments-lk-ios.git", from: "0.1.1"),
+    .package(url: "https://github.com/PAYable-IPG/payments-lk-ios.git", from: "0.1.2"),
 ],
 targets: [
     .target(name: "MyShop", dependencies: [
@@ -30,6 +30,16 @@ targets: [
 ```
 
 Each version is a tag on that repository, and its release notes are in `CHANGELOG.md`.
+
+### CocoaPods
+
+For an app that still uses CocoaPods, add this to the `Podfile` and run `pod install`:
+
+```ruby
+pod 'PaymentsLk', '~> 0.1'
+```
+
+CocoaPods stops taking new versions on 2 December 2026. Versions published before then keep installing, but later ones come through Swift Package Manager only.
 
 ## How it works
 

@@ -1,4 +1,4 @@
-# Tests the package on macOS and builds it for iOS.
+# Tests the package on macOS, builds it for iOS, and lints the CocoaPods spec.
 name: ci
 
 on:
@@ -22,3 +22,6 @@ jobs:
 
       - name: Build for iOS
         run: xcodebuild -scheme PaymentsLk -destination "generic/platform=iOS Simulator" build
+
+      - name: Lint the CocoaPods spec
+        run: pod lib lint PaymentsLk.podspec

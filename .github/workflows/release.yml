@@ -1,6 +1,11 @@
 # Swift Package Manager resolves versions from this repository's tags, so a
-# release here only checks the tag and writes its GitHub release notes from
-# CHANGELOG.md.
+# release here checks the tag, writes its GitHub release notes from
+# CHANGELOG.md, and publishes the same version to CocoaPods.
+#
+# CocoaPods' trunk takes new versions until 2 December 2026, when it becomes
+# read only. The COCOAPODS_TRUNK_TOKEN secret is a trunk session for the pod's
+# owner; with it unset the CocoaPods job is skipped, so delete the secret after
+# that date.
 name: release
 
 on:
@@ -38,3 +43,32 @@ jobs:
           fi
         env:
           GH_TOKEN: ${{ github.token }}
+
+  cocoapods:
+    needs: release
+    runs-on: macos-15
+    timeout-minutes: 30
+    environment: cocoapods
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      # Safe to run again: a version CocoaPods already has is left alone.
+      - name: Publish to CocoaPods
+        run: |
+          VERSION="$(sed -n 's/^  s.version = "\(.*\)"$/\1/p' PaymentsLk.podspec)"
+          if [ "$VERSION" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::The tag is $GITHUB_REF_NAME but PaymentsLk.podspec says $VERSION."
+            exit 1
+          fi
+          if [ -z "$COCOAPODS_TRUNK_TOKEN" ]; then
+            echo "::notice::No COCOAPODS_TRUNK_TOKEN secret, so $VERSION was not published to CocoaPods."
+            exit 0
+          fi
+          if curl -sf "https://trunk.cocoapods.org/api/v1/pods/PaymentsLk/specs/$VERSION" > /dev/null; then
+            echo "PaymentsLk $VERSION is already on CocoaPods."
+            exit 0
+          fi
+          pod trunk push PaymentsLk.podspec
+        env:
+          COCOAPODS_TRUNK_TOKEN: ${{ secrets.COCOAPODS_TRUNK_TOKEN }}
