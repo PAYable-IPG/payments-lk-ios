@@ -1,0 +1,40 @@
+# Swift Package Manager resolves versions from this repository's tags, so a
+# release here only checks the tag and writes its GitHub release notes from
+# CHANGELOG.md.
+name: release
+
+on:
+  push:
+    tags: ["[0-9]*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Check the tag names the newest version in CHANGELOG.md
+        run: |
+          VERSION="$(sed -n 's/^## \([0-9][0-9.]*\) .*/\1/p' CHANGELOG.md | head -1)"
+          if [ "$VERSION" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::The tag is $GITHUB_REF_NAME but the newest version in CHANGELOG.md is $VERSION."
+            exit 1
+          fi
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+
+      - name: GitHub release
+        run: |
+          awk -v v="$VERSION" 'index($0, "## " v " ") == 1 { on = 1; next } on && /^## / { exit } on { print }' CHANGELOG.md > "$RUNNER_TEMP/notes.md"
+          printf '\nSwift Package Manager: `.package(url: "https://github.com/PAYable-IPG/payments-lk-ios.git", from: "%s")`\n' "$VERSION" >> "$RUNNER_TEMP/notes.md"
+          if gh release view "$GITHUB_REF_NAME" > /dev/null 2>&1; then
+            echo "The release for $GITHUB_REF_NAME exists."
+          else
+            gh release create "$GITHUB_REF_NAME" --verify-tag --title "iOS $VERSION" --notes-file "$RUNNER_TEMP/notes.md"
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}

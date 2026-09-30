@@ -1,0 +1,24 @@
+# Tests the package on macOS and builds it for iOS.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: macos-15
+    timeout-minutes: 20
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Test on macOS
+        run: swift test
+
+      - name: Build for iOS
+        run: xcodebuild -scheme PaymentsLk -destination "generic/platform=iOS Simulator" build
